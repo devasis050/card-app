@@ -1,0 +1,5 @@
+
+const ADD_WS = 'ADD_WS';
+const UPDATE_PLAYER = 'UPDATE_PLAYER';
+
+export {ADD_WS, UPDATE_PLAYER};
