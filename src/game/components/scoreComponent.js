@@ -21,25 +21,31 @@ class ScoreComponent extends React.Component {
         }
     }
 
-    startNextMatch() {
-        this.props.ws.publish({ destination: "/game/finishGame" });
-        this.setState({ nextGameStarted: true })
+    backToGameHandler() {
+        if(this.state.game.round.number == 14) {
+            Axios.post('http://localhost:8080/game/finishGame').then(res=> {
+                console.log('Next game started');
+            });
+        } 
+        this.setState({backToGame:true})
     }
 
     render() {
         if (!this.state.game) {
             return <div>Loading score</div>;
-        } else if (this.state.nextGameStarted) {
+        } else if(this.state.backToGame) {
             return <Redirect to='/start'></Redirect>;
         } else {
             const game = this.state.game;
             const {team1, team2} = game;
+            const team1TotalScore = game.team1Score.reduce((t1,t2) => t1 + t2, 0);
+            const team2TotalScore = game.team2Score.reduce((t1,t2) => t1 + t2, 0);
             console.log('game in score', game)
             return (
                 <div className='d-flex flex-column justify-content-center'>
-                    <h4 className='p-4 justify-content-center'>Score board</h4>
-                    <div className='w-25 p-4'>
-                        <Table striped bordered>
+                    <h4 className='p-4 d-flex justify-content-center'>Score board</h4>
+                    <div className='w-auto p-4 mx-auto' >
+                        <Table striped bordered >
                             <thead>
                                 <tr>
                                     <th>{team1.player1}/{team1.player2}</th>
@@ -55,10 +61,16 @@ class ScoreComponent extends React.Component {
                                         </tr>
                                     })
                                 }
+                                <tr className='table-dark'>
+                                    <td>{team1TotalScore}</td>
+                                    <td>{team1TotalScore}</td>
+                                </tr>
                             </tbody>
                         </Table>
                     </div>
-                    <div className='p-4'><Button onClick={() => {this.startNextMatch()}}>Start next match</Button></div>
+                    <div className='p-4 d-flex justify-content-center'>
+                        <Button onClick={() => { this.backToGameHandler() }}>Back go game</Button>
+                    </div>
                 </div>
             )
         }

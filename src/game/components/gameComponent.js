@@ -2,12 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import Axios from 'axios';
 import { UPDATE_PLAYER } from '../../redux/actionTypes';
-import {Modal, Button, Card, Image } from 'react-bootstrap';
-import ReactConfirmAlert from 'react-confirm-alert';
-import {Redirect} from 'react-router-dom';
-// import { Card } from 'react-bootstrap'
-// import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
-
+import { Button, Image, Spinner, Badge, Modal } from 'react-bootstrap';
+import { Redirect } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 class GameComponent extends React.Component {
 
@@ -18,27 +15,25 @@ class GameComponent extends React.Component {
     }
 
     componentDidMount() {
-        if (this.props.player.cards.length === 0) {
-            Axios.post(`http://localhost:8080/player/${this.props.player.name}`)
-                .then((res) => {
-                    if (res.data) {
-                        this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data });
-                    }
-                })
-        }
-
         if (!this.state.game) {
-            console.log('Updating game');
             Axios.get('http://localhost:8080/game').then((res) => {
                 this.setState({ game: res.data });
             })
         }
-        console.log('Subscribing to /game/called', this.props);
+        if(this.props.player && this.props.player.cards.length === 0) {
+            const rangaPlayerCookie = Cookies.get('rangaPlayer');
+            const headers = { playerid: rangaPlayerCookie };
+            console.log('header', headers)
+            Axios.get(`http://localhost:8080/player`, {headers})
+                .then(res => this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data }))
+                .catch((err) => this.setState({ type: UPDATE_PLAYER, payload: null }));
+        }
         if (this.props.ws) {
             this.subscribe();
         }
 
     }
+
 
     subscribe() {
         this.setState({ isSubscribed: true });
@@ -51,59 +46,58 @@ class GameComponent extends React.Component {
         if (!this.state.isSubscribed && this.props.ws) {
             this.subscribe();
         }
-        // if (this.state.game) {
-        //     this.checkAndStartRound()
-        // }
     }
 
 
     onMessage(msg) {
-        console.log('Recieved message from server', msg.body);
         const game = JSON.parse(msg.body);
         this.setState({ game });
     }
 
     submitCalledNumber(value) {
-        console.log('Type of value', typeof value);
         this.props.player.call = value;
         this.props.ws.publish({ destination: "/game/call", body: JSON.stringify(this.props.player) });
     }
 
-    // checkAndStartRound() {
-    //     console.log('checkAndStartRound', this.state.game);
-    //     const calls = this.state.game.round.calls;
-    //     const {team1, team2} = this.state.game;
-    //     const players = [team1.player1, team2.player1, team1.player2, team2.player2];
-    //     const everyOneCalled = !players.find(player => !calls.hasOwnProperty(player))
-    //     console.log('everyOneCalled', everyOneCalled);
-    //     if (everyOneCalled) {
-    //         setTimeout(() => { this.props.ws.publish({ destination: "/game/submitRound", body: JSON.stringify(this.props.player) }) }, 5000);
-    //     }
+    selectMove(selectedCard) {
+        const round = this.state.game.round;
+        const player = this.props.player;
+        console.log('selectedCard', selectedCard);
+        console.log('round', round);
+        
+        if (round.nextTurn === player.name) {
+            this.setState({ selectedCard });
+        }
 
-    // }
-
-    selectMove(card) {
-        // console.log('select move', card);
-        // this.setState({selectedCard:card});
-        this.confirmMove(card);
+        //Last card joker scenario missing
+        // let validMove = true;
+        // const isJoker = selectedCard.type == 'S' && selectedCard.number == 2;
+        // console.log('isJoker', isJoker);
+        // if (round.nextTurn === player.name) {
+        //     if (!isJoker && round.base && round.base.type != selectedCard.type && player.cards.find(card => card.type === round.base.type)) {
+        //         alert('No cheating');
+        //     } else {
+        //         this.setState({ selectedCard });
+        //     }
+        // }
     }
 
     handleCloseModal() {
-        this.setState({selectedCard:null});
+        this.setState({ selectedCard: null });
     }
 
-    confirmMove(selectedCard) {
+    confirmMove() {
         const game = this.state.game;
-        const round = game.round;
         const player = this.props.player;
         const move = {};
-        // const selectedCard = this.state.selectedCard
+        const selectedCard = this.state.selectedCard
         move[player.name] = selectedCard;
-        
-        console.log('handle confirm', move);
-        Axios.post(`http://localhost:8080/player/${this.props.player.name}/removecard`, selectedCard).then(res=> {
-            if(res.data) {
-                this.props.dispatch({type:UPDATE_PLAYER, payload:res.data});
+        const rangaPlayerCookie = Cookies.get('rangaPlayer');
+        const headers = { playerid: rangaPlayerCookie };
+
+        Axios.post('http://localhost:8080/player/removecard', selectedCard, { headers }).then(res => {
+            if (res.data) {
+                this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data });
             }
         });
         this.props.ws.publish({ destination: "/game/submitMove", body: JSON.stringify(move) });
@@ -111,17 +105,17 @@ class GameComponent extends React.Component {
     }
 
     render() {
-
-        console.log('player render', this.props.player);
-
         const game = this.state.game;
-
+        const player = this.props.player;
+        console.log('game in game', game);
+        console.log('player', player);
         if (!game) {
             return <div>Loading game...</div>;
-        } else if(game.round.number == 14) {
+        } else if (game.round.number == 14) {
             return <Redirect to='/score'>Gave over</Redirect>
+        } else if (!player) {
+            return <Redirect to='/'>User not found</Redirect>
         } else {
-            const player = this.props.player;
             const round = game.round;
             const team1 = game.team1;
             const team2 = game.team2;
@@ -131,109 +125,114 @@ class GameComponent extends React.Component {
             const moves = round.moves;
 
             return (
-                <div className='container'>
-                    <div className='row d-flex justify-content-center'>Welcome {player.name}</div>
-                    <div className='row p-4'>
-                        <div className='col-3'>
-                            <h4>{team1.player1}/{team1.player2}</h4>
-                            <span>Score -{team1.score}/{team1.call}</span>
+                <div className='container-fluid'>
+                    <div className='row d-flex justify-content-center pb-2'>Welcome {player.name}</div>
+                    <div className='row'>
+                        <div className='col-4 d-flex flex-column '>
+                            <span className='d-flex justify-content-center'>{team1.player1[0]}{team1.player2[0]}</span>
+                            <span className='d-flex justify-content-center'>{team1.score}/{team1.call}</span>
                         </div>
-                        <div className='col-3'>
-                            <span>Ranga</span><br/>
-                            <img src={`../../../static/cards/${round.ranga.type + round.ranga.number}.png`} className='w-25 h-51'></img>
+                        <div className='col-2 d-flex flex-column'>
+                            <span className='d-flex justify-content-center'>Ranga</span>
+                            <Image thumbnail src={`../../../static/cards/${round.ranga.type + round.ranga.number}.png`}></Image>
                         </div>
-                        <div className='col-3'>
-                            <span>Base</span><br/>
-                            <img src={round.base ? `../../../static/cards/${round.base.type + round.base.number}.png` : '../../../static/cards/back.png'} className='w-25 h-51'></img>
+                        <div className='col-2 d-flex flex-column'>
+                            <span className='d-flex justify-content-center'>Base</span>
+                            <Image thumbnail src={round.base ? `../../../static/cards/${round.base.type + round.base.number}.png` : '../../../static/cards/back.png'} ></Image>
                         </div>
-                        <div className='col-3'>
-                            <h4>{team2.player1}/{team2.player2}</h4>
-                            <span>Score -{team2.score}/{team2.call}</span>
+                        <div className='col-4 d-flex flex-column'>
+                            <span className='d-flex justify-content-center'>{team2.player1[0]}{team2.player2[0]}</span>
+                            <span className='d-flex justify-content-center'>{team2.score}/{team2.call}</span>
                         </div>
                     </div>
-                    <div className='row justify-content-center'>
-                        <strong className='text-danger '> 
-                            {round.winner ? `Round won by ${round.winner}`:`Round ${round.number}`}
-                        </strong>
+                    <div className='row d-flex justify-content-center p-2'>
+                        <b>{round.winner ? `Round won by ${round.winner}` : `Round ${round.number}`}</b>
                     </div>
-                    <div className='row p-4'>
-
-                        {callPhase ? players.map(player => (<div className='col-3' key={player}>
-                            <span>{player}</span><br />
-                            {!round.calls.hasOwnProperty(player) ? <span>Calling..</span>
-                                : <span>{round.calls[player] ? round.calls[player] : 'Called'}</span>}<br />
-                        </div>
+                    <div className='row'>
+                        {callPhase ? players.map(player => (
+                            <div className='col-3 d-flex flex-column' key={player}>
+                                <span className='d-flex justify-content-center'>{player}</span>
+                                <div className='d-flex justify-content-center'>
+                                    {!round.calls.hasOwnProperty(player) ?
+                                        <div>
+                                            <span>Calling</span>
+                                            <Spinner size='sm' animation="border" variant="primary" />
+                                        </div> :
+                                        <div>
+                                            <span>{round.calls[player] ? round.calls[player] : 'Called'}</span>
+                                            <Badge variant="success"><i className="fa fa-check" aria-hidden="true" /></Badge>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         )) :
-                        players.map(player => (
-                                <div className='col-3'>
-                                    <span>{player}</span><br />
-                                    <img src={moves[player] ? `../../../static/cards/${moves[player].type + moves[player].number}.png` : '../../../static/cards/back.png'} className='w-50 h-75'></img><br />
-                                    {round.nextTurn === player && <i className="fas fa-angle-double-up"></i>}
+                            players.map(player => (
+                                <div key={player} className='col-3'>
+                                    <div className='d-flex flex-column justify-content-center' >
+                                        <span className='d-flex justify-content-center'>{player}</span>
+                                        <img className='h-100 w-100' src={moves[player] ? `../../../static/cards/${moves[player].type + moves[player].number}.png` : '../../../static/cards/back.png'}></img>
+                                        {round.nextTurn === player && <span className='d-flex justify-content-center text'>
+                                            <Spinner size='sm' animation="grow" variant="primary" />
+                                        </span>
+                                        }
+                                    </div>
                                 </div>
                             ))}
 
 
                     </div>
-                    {callPhase && <div className='row p-4 m-4'>
-                            {player.call < 0 ?
-                                <div><label htmlFor='calledNumber'>Call</label>
-                                    <input type='text' id='calledNumber'></input>
-                                    <button onClick={() => this.submitCalledNumber(document.querySelector('#calledNumber').value)}>Submit</button>
-                                </div> :
-                                <div className=''>
-                                    <span>{`You have called ${player.call}`}</span>
+                    {callPhase && <div className='row p-4'>
+                        {player.call < 0 ?
+                            <div className="input-group d-flex justify-content-center">
+                                <div className="input-group-prepend">
+                                    <span className="input-group-text">Call</span>
                                 </div>
-                            }
-                        </div>
-                    }
-                    
-
-
-                    <div className='row p-4 m-4'>
-                        {player.cards.map((card, index) => (
-                            <div className='col-2' key={index}>
-                                
-                                <Card>
-                                    <Card.Img variant="top" src={`../../../static/cards/${card.type + card.number}.png`} />
-                                    {round.nextTurn === player.name && 
-                                        <Card.Body>
-                                           <Button block='true' variant="primary" onClick={() => this.selectMove(card)}>Move</Button>
-                                        </Card.Body>
-                                    }
-                                </Card>
-                                <Modal show={false} onHide={() => this.handleCloseModal()} size='sm'>
-                                    <Modal.Body>
-                                        { this.state.selectedCard && 
-                                            <img src={`../../../static/cards/${this.state.selectedCard.type + this.state.selectedCard.number}.png`} className='w-100 h-100'></img>
-                                        }
-                                    </Modal.Body>
-                                    <Modal.Footer>
-                                    <Button variant="secondary" onClick={() => this.handleCloseModal()}>
-                                        Close
-                                    </Button>
-                                    <Button variant="primary" onClick={() => this.confirmMove()}>
-                                        Confirm
-                                    </Button>
-                                    </Modal.Footer>
-                                </Modal>
+                                <input type="text" size='2' placeholder="0-13" id='calledNumber' />
+                                <div className="input-group-append">
+                                    <button className="btn btn-primary" onClick={() => this.submitCalledNumber(document.querySelector('#calledNumber').value)}>Submit</button>
+                                </div>
+                            </div> :
+                            <div className="d-flex justify-content-center">
+                                <span className='text-primary'>{`You have called ${player.call}`}</span>
                             </div>
+                        }
+                    </div>
+                    }
+
+                    <div className='row pt-2'>
+                        {player.cards.map((card, index) => (
+                            <div key={index} className='col-3 col-md-1'>
+                                <Image className={player.name === round.nextTurn ? 'bg-primary' : 'bg-mute'} onClick={() => this.selectMove(card)} fluid src={`../../../static/cards/${card.type + card.number}.png`}></Image>
+                            </div>
+
                         ))}
                     </div>
+                    <Modal show={!!this.state.selectedCard} onHide={() => this.handleCloseModal()} centered size='sm' >
+                        <Modal.Body className="d-flex justify-content-center">
+                            {this.state.selectedCard &&
+                                <img src={`../../../static/cards/${this.state.selectedCard.type + this.state.selectedCard.number}.png`} className='w-75 h-75'></img>
+                            }
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={() => this.handleCloseModal()}>
+                                Close
+                            </Button>
+                            <Button variant="primary" onClick={() => this.confirmMove()}>
+                                Confirm
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+
                 </div>
 
             );
         }
-
-
-
     }
-
-
 }
 
 
 function mapStateToProps(state) {
-    return { player: state.player, ws: state.ws.client };
+    return { player: state.playerReducer.player, ws: state.ws.client };
 }
 
 const ConnectedGameComponent = connect(mapStateToProps)(GameComponent);
