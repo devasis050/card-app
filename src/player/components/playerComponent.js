@@ -5,6 +5,7 @@ import Axios from 'axios';
 import { UPDATE_PLAYER } from '../../redux/actionTypes';
 import { Button } from 'react-bootstrap'
 import Cookies from 'js-cookie';
+import {CARD_ADDA_SERVRE_URL} from '../../url'
 
 class PlayerComonent extends React.Component {
 
@@ -18,14 +19,14 @@ class PlayerComonent extends React.Component {
             const rangaPlayerCookie = Cookies.get('rangaPlayer');
             const headers = { playerid: rangaPlayerCookie };
             console.log('header', headers)
-            Axios.get(`http://localhost:8080/player`, {headers})
+            Axios.get(`${CARD_ADDA_SERVRE_URL}/player`, {headers})
                 .then(res => this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data }))
                 .catch((err) => this.setState({ playerNotFound: true }));
         }
     }
 
     createPlayer(playerName) {
-        Axios.post('http://localhost:8080/player', { name: playerName }).then(res => {
+        Axios.post(`${CARD_ADDA_SERVRE_URL}/player`, { name: playerName }).then(res => {
             if (res.data) {
                 Cookies.set('rangaPlayer', res.data.id);
                 this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data });

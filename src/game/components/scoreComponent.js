@@ -4,6 +4,7 @@ import { Table, Button } from 'react-bootstrap';
 import { Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
 import Axios from 'axios';
+import {CARD_ADDA_SERVRE_URL} from '../../url'
 
 class ScoreComponent extends React.Component {
 
@@ -15,7 +16,7 @@ class ScoreComponent extends React.Component {
     componentDidMount() {
         if (!this.state.game) {
             console.log('Updating game');
-            Axios.get('http://localhost:8080/game').then((res) => {
+            Axios.get(`${CARD_ADDA_SERVRE_URL}/game`).then((res) => {
                 this.setState({ game: res.data });
             })
         }
@@ -23,7 +24,7 @@ class ScoreComponent extends React.Component {
 
     backToGameHandler() {
         if(this.state.game.round.number == 14) {
-            Axios.post('http://localhost:8080/game/finishGame').then(res=> {
+            Axios.post(`${CARD_ADDA_SERVRE_URL}/game/finishGame`).then(res=> {
                 console.log('Next game started');
             });
         } 

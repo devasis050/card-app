@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "server": "webpack-dev-server"
+    "start": "webpack-dev-server"
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +15,7 @@
     "@stomp/stompjs": "^5.4.4",
     "axios": "^0.19.2",
     "babel-loader": "^8.0.6",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "js-cookie": "^2.2.1",
     "react": "^16.12.0",

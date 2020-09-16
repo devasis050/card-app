@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { ADD_WS } from '../../redux/actionTypes'
 import Axios from 'axios';
-
+import {CARD_ADDA_WS_URL, CARD_ADDA_SERVRE_URL} from '../../url';
 import { Client } from '@stomp/stompjs'
 import { Redirect } from 'react-router-dom';
 import { Table, Button } from 'react-bootstrap';
@@ -48,7 +48,7 @@ class StartGame extends React.Component {
     componentDidMount() {
         if (!this.props.ws) {
             const ws = new Client({
-                brokerURL: "ws://localhost:8080/ws"
+                brokerURL: `${CARD_ADDA_WS_URL}/ws`
             });
             //https://stomp-js.github.io/guide/stompjs/using-stompjs-v5.html
             ws.onConnect = (msg) => {
@@ -63,7 +63,7 @@ class StartGame extends React.Component {
 
         if (!this.state.game) {
             console.log('Loading game in component did mount');
-            Axios.get('http://localhost:8080/game').then((res) => {
+            Axios.get(`${CARD_ADDA_SERVRE_URL}/game`).then((res) => {
                 this.setState({ game: res.data });
             })
         }

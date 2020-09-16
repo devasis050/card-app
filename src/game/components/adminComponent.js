@@ -1,10 +1,11 @@
 import Axios from "axios";
 import React from 'react';
+import {CARD_ADDA_SERVRE_URL} from '../../url';
 
 const AdminComponent = () => {
     
     const resetGame = () => {
-        Axios.post('http://localhost:8080/game/reset').then(res => {
+        Axios.post(`${CARD_ADDA_SERVRE_URL}/game/reset`).then(res => {
                 console.log('Game reset', res.data);
             })
     }

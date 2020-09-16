@@ -5,6 +5,7 @@ import { UPDATE_PLAYER } from '../../redux/actionTypes';
 import { Button, Image, Spinner, Badge, Modal } from 'react-bootstrap';
 import { Redirect } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import {CARD_ADDA_SERVRE_URL} from '../../url';
 
 class GameComponent extends React.Component {
 
@@ -16,7 +17,7 @@ class GameComponent extends React.Component {
 
     componentDidMount() {
         if (!this.state.game) {
-            Axios.get('http://localhost:8080/game').then((res) => {
+            Axios.get(`${CARD_ADDA_SERVRE_URL}/game`).then((res) => {
                 this.setState({ game: res.data });
             })
         }
@@ -24,7 +25,7 @@ class GameComponent extends React.Component {
             const rangaPlayerCookie = Cookies.get('rangaPlayer');
             const headers = { playerid: rangaPlayerCookie };
             console.log('header', headers)
-            Axios.get(`http://localhost:8080/player`, {headers})
+            Axios.get(`${CARD_ADDA_SERVRE_URL}/player`, {headers})
                 .then(res => this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data }))
                 .catch((err) => this.setState({ type: UPDATE_PLAYER, payload: null }));
         }
@@ -95,7 +96,7 @@ class GameComponent extends React.Component {
         const rangaPlayerCookie = Cookies.get('rangaPlayer');
         const headers = { playerid: rangaPlayerCookie };
 
-        Axios.post('http://localhost:8080/player/removecard', selectedCard, { headers }).then(res => {
+        Axios.post(`${CARD_ADDA_SERVRE_URL}/player/removecard`, selectedCard, { headers }).then(res => {
             if (res.data) {
                 this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data });
             }
