@@ -12,7 +12,7 @@ app.use('/dist', express.static(distPath));
 app.use('/static', express.static(staticResources));
 app.use('/fab', express.static(fabIcons));
 
-app.get('/', (req, res) => {
+app.get('/*', (req, res) => {
     console.log('/ invoked');
     const htmlPath = path.join(__dirname, './index.html')
     res.sendFile(htmlPath);
