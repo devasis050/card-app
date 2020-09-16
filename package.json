@@ -34,6 +34,9 @@
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.10.1"
   },
+  "engines": {
+    "node": "12.14.1"
+  },
   "babel": {
     "presets": [
       "@babel/preset-react"
