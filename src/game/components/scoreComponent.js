@@ -15,7 +15,6 @@ class ScoreComponent extends React.Component {
 
     componentDidMount() {
         if (!this.state.game) {
-            console.log('Updating game');
             Axios.get(`${CARD_ADDA_SERVRE_URL}/game`).then((res) => {
                 this.setState({ game: res.data });
             })
@@ -41,7 +40,6 @@ class ScoreComponent extends React.Component {
             const {team1, team2} = game;
             const team1TotalScore = game.team1Score.reduce((t1,t2) => t1 + t2, 0);
             const team2TotalScore = game.team2Score.reduce((t1,t2) => t1 + t2, 0);
-            console.log('game in score', game)
             return (
                 <div className='d-flex flex-column justify-content-center'>
                     <h4 className='p-4 d-flex justify-content-center'>Score board</h4>

@@ -17,14 +17,12 @@ class StartGame extends React.Component {
 
 
     onMessage(msg) {
-        console.log('Received message from server', msg.body)
         const game = JSON.parse(msg.body);
         this.setState({ game: game});
 
     }
 
     joinGame(teamNumber) {
-        console.log('join game', this.props.player);
         const joinRequest = {
             playerName: this.props.player.name,
             teamNumber
@@ -38,7 +36,6 @@ class StartGame extends React.Component {
 
     componentDidUpdate() {
         if (!this.state.isSubscribed && this.props.ws) {
-            console.log('subscribe');
             this.props.ws.subscribe("/game/playerJoined", this.onMessage);
             this.props.ws.subscribe("/game/started", this.onMessage);
             this.setState({ isSubscribed: true });
@@ -62,7 +59,6 @@ class StartGame extends React.Component {
         }
 
         if (!this.state.game) {
-            console.log('Loading game in component did mount');
             Axios.get(`${CARD_ADDA_SERVRE_URL}/game`).then((res) => {
                 this.setState({ game: res.data });
             })
@@ -74,7 +70,6 @@ class StartGame extends React.Component {
     render() {
         const game = this.state.game;
         const player = this.props.player;
-        console.log('game in start', game);
         const renderPlayer = (image, player) => {
             return <div className='d-flex flex-column'>
                 <div className='d-flex justify-content-center'><img src={`../../../static/avatars/${image}.png`} className='w-50 h-80'></img></div>

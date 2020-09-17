@@ -18,7 +18,6 @@ class PlayerComonent extends React.Component {
         if (!this.props.player) {
             const rangaPlayerCookie = Cookies.get('rangaPlayer');
             const headers = { playerid: rangaPlayerCookie };
-            console.log('header', headers)
             Axios.get(`${CARD_ADDA_SERVRE_URL}/player`, {headers})
                 .then(res => this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data }))
                 .catch((err) => this.setState({ playerNotFound: true }));

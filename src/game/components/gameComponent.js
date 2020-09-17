@@ -24,7 +24,6 @@ class GameComponent extends React.Component {
         if(this.props.player && this.props.player.cards.length === 0) {
             const rangaPlayerCookie = Cookies.get('rangaPlayer');
             const headers = { playerid: rangaPlayerCookie };
-            console.log('header', headers)
             Axios.get(`${CARD_ADDA_SERVRE_URL}/player`, {headers})
                 .then(res => this.props.dispatch({ type: UPDATE_PLAYER, payload: res.data }))
                 .catch((err) => this.setState({ type: UPDATE_PLAYER, payload: null }));
@@ -63,8 +62,6 @@ class GameComponent extends React.Component {
     selectMove(selectedCard) {
         const round = this.state.game.round;
         const player = this.props.player;
-        console.log('selectedCard', selectedCard);
-        console.log('round', round);
         
         if (round.nextTurn === player.name && round.number !== 0) {
             this.setState({ selectedCard });
@@ -108,8 +105,6 @@ class GameComponent extends React.Component {
     render() {
         const game = this.state.game;
         const player = this.props.player;
-        console.log('game in game', game);
-        console.log('player', player);
         if (!game) {
             return <div>Loading game...</div>;
         } else if (game.round.number == 14) {
