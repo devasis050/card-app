@@ -64,7 +64,7 @@ class ScoreComponent extends React.Component {
                                 }
                                 <tr className='table-dark'>
                                     <td>{team1TotalScore}</td>
-                                    <td>{team1TotalScore}</td>
+                                    <td>{team2TotalScore}</td>
                                 </tr>
                             </tbody>
                         </Table>

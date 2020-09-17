@@ -66,7 +66,7 @@ class GameComponent extends React.Component {
         console.log('selectedCard', selectedCard);
         console.log('round', round);
         
-        if (round.nextTurn === player.name) {
+        if (round.nextTurn === player.name && round.number !== 0) {
             this.setState({ selectedCard });
         }
 
@@ -203,7 +203,7 @@ class GameComponent extends React.Component {
                     <div className='row pt-2'>
                         {player.cards.map((card, index) => (
                             <div key={index} className='col-3 col-md-1'>
-                                <Image className={player.name === round.nextTurn ? 'bg-primary' : 'bg-mute'} onClick={() => this.selectMove(card)} fluid src={`../../../static/cards/${card.type + card.number}.png`}></Image>
+                                <Image className={player.name === round.nextTurn && !callPhase? 'bg-primary' : 'bg-mute'} onClick={() => this.selectMove(card)} fluid src={`../../../static/cards/${card.type + card.number}.png`}></Image>
                             </div>
 
                         ))}
